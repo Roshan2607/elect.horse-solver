@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Elect Horse · Auto District</title>
+  <style>
+    :root{color-scheme:dark;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
+    *{box-sizing:border-box}
+    body{background:#0e2020;color:#e9fff1;margin:0;width:430px;min-height:300px}
+    header{background:#176b47;padding:20px 20px 15px;border-bottom:2px solid #338d5a}
+    h1{margin:0;font-size:21px;letter-spacing:-.6px}h1 span{color:#f8cb47}
+    header p{font-size:12px;opacity:.84;margin:7px 0 0}
+    main{padding:16px 18px 18px}button,select,input{font:inherit}
+    .row{display:flex;align-items:center;gap:8px}
+    .btn{border:1px solid #467863;padding:11px 10px;border-radius:9px;background:#1b3e33;color:#ecfff1;cursor:pointer;font-weight:700;white-space:nowrap}
+    .btn:disabled{opacity:.45;cursor:default}
+    .btn.primary{background:#f9c747;color:#17352b;border-color:#f9c747}
+    .btn.accent{background:#2ec38b;color:#092a24;border-color:#2ec38b}
+    .btn:hover:not(:disabled){filter:brightness(1.1)}
+    .grow{flex:1}.mb{margin-bottom:12px}
+    label{font-size:12px;color:#bad8c5}
+    select,input{width:100%;background:#112f27;color:#e9fff1;border:1px solid #4b7b65;border-radius:7px;padding:9px}
+    .stats{margin:12px 0 8px;font-size:12px;color:#b7e8d0}
+    #status{font-size:12px;line-height:1.55;min-height:38px;margin:10px 0;color:#d5eadd;white-space:pre-wrap}
+    #status.error{color:#ff9c9c}
+    #board{display:none;border-radius:11px;border:1px solid #315d4d;background:#1b6b3a;max-width:100%;height:210px;width:100%;margin:12px 0 8px;cursor:crosshair}
+    .legend{display:flex;justify-content:center;gap:15px;font-size:11px;color:#b4d1c1}
+    .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px}
+    small{display:block;color:#8daa9d;margin-top:9px;line-height:1.45}
+    #results{padding:10px;background:#17372c;border-radius:8px;font-size:12px;line-height:1.65;display:none;margin:8px 0}
+    hr{height:1px;border:0;background:#315c49;margin:12px 0}
+  </style>
+</head>
+<body>
+<header>
+  <h1>elect<span>.horse</span> · Auto District</h1>
+  <p>Detect voters → solve the graph → draw the districts</p>
+</header>
+<main>
+  <div class="row mb"><button id="scan" class="btn primary grow">1. Capture board</button><button id="clear" class="btn">Hide overlay</button></div>
+  <div class="row mb">
+    <div class="grow"><label for="districts">Number of districts</label><select id="districts"><option value="2">2 districts</option><option value="3" selected>3 districts</option><option value="4">4 districts</option><option value="5">5 districts</option><option value="6">6 districts</option><option value="7">7 districts</option><option value="8">8 districts</option><option value="9">9 districts</option><option value="10">10 districts</option><option value="11">11 districts</option><option value="12">12 districts</option></select></div>
+    <div class="grow"><label for="effort">Search effort</label><select id="effort"><option value="normal">Normal</option><option value="deep">Deep (slower)</option></select></div>
+  </div>
+  <div id="stats" class="stats">Open a puzzle on elect.horse, then capture its visible board.</div>
+  <svg id="board" viewBox="0 0 400 210" role="img" aria-label="Detected tiles: click a tile to correct its type"></svg>
+  <div id="legend" class="legend" hidden><span><i class="dot" style="background:#5fd3ff"></i>Horse</span><span><i class="dot" style="background:#ff4d6d"></i>Cow</span><span><i class="dot" style="background:#b58cff"></i>Donkey</span><span>Click a hex to correct it</span></div>
+  <div class="row mb"><button id="solve" class="btn accent grow" disabled>2. Solve + preview</button><button id="place" class="btn primary grow" disabled>3. Auto-place clicks</button></div>
+  <div id="results"></div>
+  <p id="status">The board must be fully visible in the tab. Ctrl + - zooms out.</p>
+  <hr>
+  <small>Local only. No uploads, external services, page-source hacks, or automatic submission. Auto-place uses simulated clicks; if the game rejects them, the colored boundary overlay still shows a solution to follow manually.</small>
+</main>
+<script src="parser.js"></script><script src="popup.js"></script>
+</body>
+</html>
