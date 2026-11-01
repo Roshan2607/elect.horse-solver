@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Elect Horse — Auto District",
   "short_name": "Auto District",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Read elect.horse's hex board, solve connected equal-population districts, and optionally click the proposed districts into the game.",
   "permissions": ["activeTab", "scripting"],
   "action": {

@@ -5,10 +5,10 @@ const palette=['#fbc84e','#ba8df1','#50d6a1','#ff9758','#5aa6ed','#fb83ac','#b3e
 function status(msg,error=false){$('status').textContent=msg;$('status').className=error?'error':'';}
 function countBoard(){
   if(!board)return;
-  const counts={horse:0,cow:0,donkey:0,water:0,empty:0};
-  for(const t of board.tiles){if(t.kind===1)counts.horse++;else if(t.kind===2)counts.cow++;else if(t.kind===3)counts.donkey++;else if(t.kind===-1)counts.water++;else counts.empty++;}
-  board.total=counts.horse+counts.cow+counts.donkey;
-  $('stats').textContent=`Detected ${board.tiles.length} hexes · ${counts.horse} horse · ${counts.cow} cow · ${counts.water} water · ${counts.empty} empty`;
+  const counts={horse:0,cow:0,donkey:0,goat:0,water:0,empty:0};
+  for(const t of board.tiles){if(t.kind===1)counts.horse++;else if(t.kind===2)counts.cow++;else if(t.kind===3)counts.donkey++;else if(t.kind===4)counts.goat++;else if(t.kind===-1)counts.water++;else counts.empty++;}
+  board.total=counts.horse+counts.cow+counts.donkey+counts.goat;
+  $('stats').textContent=`Detected ${board.tiles.length} hexes · ${counts.horse} horse · ${counts.cow} cow · ${counts.donkey} donkey · ${counts.goat} goat · ${counts.water} water · ${counts.empty} empty`;
   const candidates=Array.from({length:11},(_,i)=>i+2).filter(k=>board.total%k===0);
   const select=$('districts');
   for(const o of select.options){o.disabled=!candidates.includes(+o.value);}
@@ -36,7 +36,7 @@ function drawMini(){
     hex.setAttribute('stroke','#99bda3');hex.setAttribute('stroke-width','1');
     hex.addEventListener('click',()=>{
       if(worker) {status('Wait for the current solve to finish before editing the board.');return;}
-      t.kind=({[-1]:0,0:1,1:2,2:3,3:-1})[t.kind];
+      t.kind=({[-1]:0,0:1,1:2,2:3,3:4,4:-1})[t.kind];
       solution=null; $('place').disabled=true;countBoard();drawMini();
       status('Tile corrected. Solve again to update the boundaries.');
     });
@@ -44,7 +44,7 @@ function drawMini(){
     if(t.kind!==0){
       const mark=document.createElementNS(ns,t.kind===-1?'rect':'circle');
       if(t.kind===-1){mark.setAttribute('x',cx-r*.37);mark.setAttribute('y',cy-r*.35);mark.setAttribute('width',r*.75);mark.setAttribute('height',r*.7);mark.setAttribute('rx','3');mark.setAttribute('fill','#062f48');}
-      else {mark.setAttribute('cx',cx);mark.setAttribute('cy',cy);mark.setAttribute('r',r*.30);mark.setAttribute('fill',t.kind===1?'#5fd3ff':t.kind===2?'#ff4d6d':'#b58cff');}
+      else {mark.setAttribute('cx',cx);mark.setAttribute('cy',cy);mark.setAttribute('r',r*.30);mark.setAttribute('fill',t.kind===1?'#5fd3ff':t.kind===2?'#ff4d6d':t.kind===3?'#b58cff':'#f4dc73');}
       mark.setAttribute('pointer-events','none');svg.appendChild(mark);
     }
   }
@@ -76,7 +76,7 @@ $('scan').addEventListener('click',async()=>{
     const ctx=canv.getContext('2d',{willReadFrequently:true});ctx.drawImage(image,0,0);
     board=ElectParser.identifyBoard(ctx.getImageData(0,0,canv.width,canv.height));
     countBoard();drawMini();$('solve').disabled=false;
-    status('Review the mini-board. Click a tile to cycle: empty → horse → cow → donkey → water. Choose the district count shown in the game.');
+    status('Verify voter counts against the game; the parser is heuristic and does not read the game source. Review the mini-board. Click a tile to cycle: empty → horse → cow → donkey → goat → water. Choose the district count shown in the game.');
   } catch(e){board=null;status('Capture failed: '+e.message,true);}finally{$('scan').disabled=false;}
 });
 $('solve').addEventListener('click',async()=>{
@@ -94,9 +94,9 @@ $('solve').addEventListener('click',async()=>{
       const w=worker;worker=null;w.terminate();$('solve').disabled=false;
       if(evt.data.type==='error'){status('Solver error: '+evt.data.message,true);return;}
       const res=evt.data.result;
-      if(!res.ok){status(res.reason+` Explored ${res.expanded.toLocaleString()} states.`,true);return;}
+      if(!res.ok){$('results').style.display='none';status(res.reason+` Explored ${res.expanded.toLocaleString()} states.`,true);return;}
       solution=res;drawMini();
-      const output=res.stats.map(s=>`D${s.district}: ${s.counts[1]||0} horse / ${s.counts[2]||0} cow / ${s.counts[3]||0} donkey → ${['tie','HORSE','cow','donkey'][s.winner]||'other'}`).join('<br>');
+      const output=res.stats.map(s=>`D${s.district}: ${s.counts[1]||0} horse / ${s.counts[2]||0} cow / ${s.counts[3]||0} donkey / ${s.counts[4]||0} goat → ${['tie','HORSE','cow','donkey','goat'][s.winner]||'other'}`).join('<br>');
       $('results').style.display='block';$('results').innerHTML=`<strong>${res.horseLeads?'Horse leads!':'No horse win yet'} · ${res.horseWins}/${k} horse seats</strong> · ${res.expanded.toLocaleString()} states · ${(res.millis/1000).toFixed(1)}s<br>${output}`;
       try {
         const p=await send({type:'ELECT_PREVIEW',board,assignment:res.assignment});

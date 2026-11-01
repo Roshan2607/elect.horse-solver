@@ -15,26 +15,28 @@
     const count = active.length;
     const k = Number(districtCount);
     if (!Number.isInteger(k) || k<2 || k>12) throw Error('District count must be between 2 and 12.');
-    if (count>63) throw Error('This version supports up to 63 traversable tiles.');
+    if (count>110) throw Error('Board exceeds the 110-cell safety limit for exhaustive search.');
     const voters = active.filter(t=>t.kind>0).length;
     if (voters===0 || voters%k) throw Error(`${voters} voters cannot be divided equally into ${k} districts.`);
     const quota = voters/k;
     if (quota<2) throw Error('Each district must have at least two voters.');
+    if (tiles.some(t=>!Number.isInteger(t.kind)||t.kind < -1||t.kind>4 || !Array.isArray(t.neighbors))) throw Error('Invalid tile classification or adjacency.');
     const indexByOld = new Map(active.map((t,i)=>[t.old,i]));
     const adj = active.map(t => t.neighbors.map(j=>indexByOld.get(j)).filter(j=>j!==undefined));
+    for(let i=0;i<adj.length;i++) for(const j of adj[i]) if(j===i || !adj[j].includes(i)) throw Error('Board adjacency must be symmetric and exclude self-loops.');
     const bits=active.map((_,i)=>BITS(i));
     const adjMask=adj.map(a=>a.reduce((m,j)=>m|bits[j],0n));
     const all=bits.reduce((m,b)=>m|b,0n);
     const partyCount = Math.max(2,...active.map(t=>t.kind));
     const kind=active.map(t=>t.kind);
     const value=kind.map(c=>c>0?1:0);
-    const limit=options.maxStates||MAX_STATES_DEFAULT;
-    const target=options.targetWins || (partyCount>2?Math.ceil(k/3):Math.floor(k/2)+1);
+    const limit=options.maxStates ?? MAX_STATES_DEFAULT;
+    const target=options.targetWins ?? (partyCount>2?Math.ceil(k/3):Math.floor(k/2)+1);
     let expanded=0, best=null, bestScore=-Infinity, stopped=false;
     let targetHit=false;
     const started=Date.now();
-    const maxMillis=options.maxMillis||7500;
-    const maxCand=options.maxCandidatesPerDistrict||18000;
+    const maxMillis=options.maxMillis ?? 7500;
+    const maxCand=options.maxCandidatesPerDistrict ?? 18000;
 
     function scoreDistrict(mask) {
       const cc=Array(partyCount+1).fill(0);
@@ -72,10 +74,7 @@
           const news=adjMask[i]&left&~seen;
           if(news){seen|=news;frontier|=news;}
         }
-        if(partyVoters===0) {
-          // Unclaimed empty-only islands are not valid districts.
-          return false;
-        }
+        if(partyVoters===0) return false;
         if(partyVoters % quota !== 0 || partyVoters < quota) return false;
         voteTotal+=partyVoters;
         left &= ~seen;
@@ -131,7 +130,8 @@
           const next=rem&~mask;
           if(!componentsValid(next,left-1))return;
           const thisScore=scoreDistrict(mask);
-          if(wins+thisScore.horse+(left-1)<(best?.horseWins||0))return;
+          // A higher Horse seat total is not sufficient to prove a better election result.
+          // Preserve branches that might yield a strict lead over every rival.
           recurse(next,regions+1,wins+thisScore.horse,partitions.concat([mask]));
           // A solved district may need to include one or more adjacent empty
           // tiles to prevent a disconnected empty-only island in the remainder.
@@ -159,7 +159,7 @@
     const assignment=Array(tiles.length).fill(-1);
     best.parts.forEach((mask,d)=>{let x=mask;while(x){const b=x&-x; assignment[active[bitId.get(b)].old]=d; x^=b;}});
     const stats=best.parts.map((mask,i)=>({...scoreDistrict(mask),district:i+1}));
-    return {ok:true,assignment,stats,horseWins:best.horseWins,winCounts:best.winCounts,horseLeads:best.horseLeads,districts:k,quota,expanded,millis:Date.now()-started,optimal:targetHit,
+    return {ok:true,assignment,stats,horseWins:best.horseWins,winCounts:best.winCounts,horseLeads:best.horseLeads,districts:k,quota,expanded,millis:Date.now()-started,optimal:!stopped&&!targetHit,
       warning:!best.horseLeads?'No horse victory found within the search budget. You can try Deep search.':targetHit?'':stopped?'Winning solution found; not guaranteed to maximize horse seats.':''};
   }
   scope.ElectSolver = {solve};

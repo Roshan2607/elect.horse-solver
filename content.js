@@ -96,7 +96,7 @@
       }
       await pause(110);
     }
-    return {ok:true,sent,info:'Clicks sent; please inspect the board before submitting the election. Synthetic clicks are not guaranteed to work with every game version.'};
+    return {ok:true,sent,verified:false,info:'Synthetic clicks dispatched but NOT verified by the game. Inspect the board manually.'};
   }
   chrome.runtime.onMessage.addListener((m,sender,sendResponse)=>{
     if(m.type==='ELECT_PREVIEW') {sendResponse(preview(m.board,m.assignment));return;}

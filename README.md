@@ -39,4 +39,12 @@ Requests only `activeTab` and `scripting`. Capture, classification and computati
 Run `node tests/test.js` and `node tests/test-three-parties.js` to check the graph solver. The parser has been exercised against the user's partially obscured 2048 × 1431 screenshot; it reconstructed 45 visible voters and 13 ponds, with the three obscured voters correctly unavailable from that image.
 
 Not affiliated with elect.horse or its creators.
-"# elect.horse-solver" 
+
+
+## v0.3 verification notes
+- Official elect.horse client source could not be retrieved. This is an independent screenshot-based extension, not a modification of the original game.
+- Added fourth-party correction/classification (yellow Goat detection is heuristic and may require manual correction).
+- Corrected search pruning and the `optimal` label; an early target victory is never proof of mathematical optimality.
+- The preview is an SVG overlay, **not** a verified boundary submission to the live site. Synthetic clicks are experimental and should not be represented as confirmed working.
+- Test via `node tests/test.js && node tests/test-three-parties.js && node tests/test-edge-cases.js`.
+- Test screenshots with Chrome at the current zoom level. Confirm all counts and district numbers before solving.

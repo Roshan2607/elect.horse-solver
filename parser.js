@@ -11,6 +11,8 @@
     if(r>50 && r<150 && g>165 && b>205 && b>g*1.1) return 1; // horse
     if(r>205 && g>=38 && g<160 && b>=55 && b<185 && r>g*1.5) return 2; // cow
     if(r>125 && r<225 && g>85 && g<190 && b>200 && b>g*1.2 && b>r*1.15) return 3; // donkey
+    // Goat voter icons are yellow in some levels; user must confirm this detection.
+    if(r>175 && g>145 && b>45 && b<160 && r>g*1.04 && g>b*1.35) return 4;
     return 0;
   }
   function isPond(r,g,b) {
@@ -154,7 +156,8 @@
       waters:tiles.filter(t=>t.kind===-1).length,
       blue:tiles.filter(t=>t.kind===1).length,
       red:tiles.filter(t=>t.kind===2).length,
-      purple:tiles.filter(t=>t.kind===3).length};
+      purple:tiles.filter(t=>t.kind===3).length,
+      goat:tiles.filter(t=>t.kind===4).length};
   }
   scope.ElectParser={identifyBoard};
   if(typeof module!=='undefined'&&module.exports)module.exports=scope.ElectParser;
